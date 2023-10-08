@@ -4,37 +4,47 @@ import os
 
 Command = enum.Enum('Command', 'ON OFF TOGGLE'.split())
 
-def row_bitstring(start, inclusive_end):
-    result = 0
-    for i in range(start, inclusive_end + 1):
-        result |= 2**i
-    return result
-
 class Grid:
     def __init__(self):
-        self.grid = [0] * 1000
+        self.lights = []
+        for _ in range(1000):
+            self.lights.append([0] * 1000)
 
     def execute(self, command, lower_left, upper_right):
-        bitstring = row_bitstring(lower_left[1], upper_right[1])
-        if command == Command.OFF:
-            bitstring = (2**1000 - 1) ^ bitstring
         for i in range(lower_left[0], upper_right[0] + 1):
-            if command == Command.ON:
-                self.grid[i] |= bitstring
-            elif command == Command.OFF:
-                self.grid[i] &= bitstring
-            else:
-                assert command == Command.TOGGLE
-                self.grid[i] ^= bitstring
+            for j in range(lower_left[1], upper_right[1] + 1):
+                if command == Command.ON:
+                    self.lights[i][j] = 1
+                elif command == Command.OFF:
+                    self.lights[i][j] = 0
+                else:
+                    assert command == Command.TOGGLE
+                    self.lights[i][j] ^= 1
+
+    def execute2(self, command, lower_left, upper_right):
+        for i in range(lower_left[0], upper_right[0] + 1):
+            for j in range(lower_left[1], upper_right[1] + 1):
+                if command == Command.ON:
+                    self.lights[i][j] += 1
+                elif command == Command.OFF:
+                    self.lights[i][j] = max(self.lights[i][j] - 1, 0)
+                else:
+                    assert command == Command.TOGGLE
+                    self.lights[i][j] += 2
 
     def num_lights_on(self):
         count = 0
-        for row in self.grid:
-            while row:
-                count += 1
-                row &= (row - 1)
+        for row in self.lights:
+            for light in row:
+                if light:
+                    count += 1
         return count
 
+    def total_brightness(self):
+        brightness = 0
+        for row in self.lights:
+            brightness += sum(row)
+        return brightness
 
 def parse_point_string(s):
     return tuple(int(i) for i in s.split(','))
@@ -59,7 +69,10 @@ def part1(puzzle_input):
     return grid.num_lights_on()
 
 def part2(puzzle_input):
-    pass
+    grid = Grid()
+    for line in puzzle_input.splitlines():
+        grid.execute2(*parse_line(line))
+    return grid.total_brightness()
 
 def main():
     for filename in ('example', 'input'):
