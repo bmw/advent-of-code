@@ -4,37 +4,42 @@ const DIGITS: [&str; 9] = [
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 ];
 
+fn numeric_digits(line: &str) -> (Option<(usize, u32)>, Option<(usize, u32)>) {
+    let mut iter = line.match_indices(char::is_numeric);
+    let first = iter.next().map(|(i, v)| (i, v.parse().unwrap()));
+    let last = iter.last().map_or(first, |(i, v)| Some((i, v.parse().unwrap())));
+    (first, last)
+}
+
 fn part1(input: &str) -> u32 {
     input.lines()
         .map(|line| {
-            let mut iter = line.matches(char::is_numeric);
-            let first: u32 = iter.next().unwrap().parse().unwrap();
-            let last = iter.last().map_or(first, |v| v.parse().unwrap());
-            first * 10 + last
+            let (first, last) = numeric_digits(line);
+            first.unwrap().1 * 10 + last.unwrap().1
         })
         .sum()
-}
-
-fn convert_digit(input: &str) -> u32 {
-    for (i, digit) in (1..).zip(DIGITS) {
-        if input == digit {
-            return i;
-        }
-    }
-    input.parse().unwrap()
 }
 
 fn part2(input: &str) -> u32 {
     input.lines()
         .map(|line| {
-            let mut matches: Vec<_> = line.match_indices(char::is_numeric).collect();
-            for digit in DIGITS {
-                matches.extend(line.match_indices(digit));
+            let (mut first, mut last) = numeric_digits(line);
+            for (i, digit) in (1..).zip(DIGITS) {
+                let mut iter = line.match_indices(digit).peekable();
+                first = iter.peek().map_or(first, |&(j, _)| {
+                    if first.is_none() || j < first.unwrap().0 {
+                        return Some((j, i));
+                    }
+                    first
+                });
+                last = iter.last().map_or(last, |(j, _)| {
+                    if last.is_none() || j > last.unwrap().0 {
+                        return Some((j, i));
+                    }
+                    last
+                });
             }
-            matches.sort();
-            let first = convert_digit(matches[0].1);
-            let last = convert_digit(matches[matches.len() - 1].1);
-            first * 10 + last
+            first.unwrap().1 * 10 + last.unwrap().1
         })
         .sum()
 }
