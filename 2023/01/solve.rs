@@ -5,7 +5,8 @@ const DIGITS: [&str; 9] = [
 ];
 
 fn part1(input: &str) -> u32 {
-    input.lines()
+    input
+        .lines()
         .map(|line| {
             let mut iter = line.matches(char::is_numeric);
             let first: u32 = iter.next().unwrap().parse().unwrap();
@@ -25,16 +26,19 @@ fn convert_digit(input: &str) -> u32 {
 }
 
 fn part2(input: &str) -> u32 {
-    input.lines()
+    input
+        .lines()
         .map(|line| {
-            let mut matches: Vec<_> = line.match_indices(char::is_numeric).collect();
-            for digit in DIGITS {
-                matches.extend(line.match_indices(digit));
-            }
-            matches.sort();
-            let first = convert_digit(matches[0].1);
-            let last = convert_digit(matches[matches.len() - 1].1);
-            first * 10 + last
+            DIGITS
+                .iter()
+                .map(|s| line.match_indices(s))
+                .flatten()
+                .chain(line.match_indices(char::is_numeric))
+                .fold([(usize::MAX, ""), (usize::MIN, "")], |acc, item| {
+                    [item.min(acc[0]), item.max(acc[1])]
+                })
+                .iter()
+                .fold(0, |acc, (_, v)| acc * 10 + convert_digit(v))
         })
         .sum()
 }
