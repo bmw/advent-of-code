@@ -3,3 +3,4 @@ example*
 input
 # ignore solve binary files
 solve
+*.dSYM/
