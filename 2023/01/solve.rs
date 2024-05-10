@@ -8,9 +8,9 @@ fn part1(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
-            let mut iter = line.matches(char::is_numeric);
-            let first: u32 = iter.next().unwrap().parse().unwrap();
-            let last = iter.last().map_or(first, |v| v.parse().unwrap());
+            let mut iter = line.matches(char::is_numeric).map(|v| v.parse().unwrap());
+            let first: u32 = iter.next().unwrap();
+            let last = iter.last().unwrap_or(first);
             first * 10 + last
         })
         .sum()
