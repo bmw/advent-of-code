@@ -18,7 +18,7 @@ fn part1(doc: &str) -> u32 {
 fn convert_digit(input: &str) -> u32 {
     for (i, digit) in (1..).zip(DIGITS) {
         if input == digit {
-            return i
+            return i;
         }
     }
     input.parse().unwrap()
