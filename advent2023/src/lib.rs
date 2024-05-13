@@ -44,10 +44,11 @@ pub fn calculate_and_print<A: Display, B: Display>(
     part1: fn(&str) -> A,
     part2: fn(&str) -> B,
 ) {
+    let file_count = file_contents.len();
     let inputs: Vec<_> = file_contents
         .iter()
         .enumerate()
-        .map(|(i, s)| Input::new(s, i, file_contents.len()))
+        .map(|(i, s)| Input::new(s, i, file_count))
         .collect();
     for input in inputs {
         if input.run_part1 {
