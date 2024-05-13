@@ -4,7 +4,7 @@ const DIGITS: [&str; 9] = [
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 ];
 
-fn part1(input: &str) -> String {
+fn part1(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
@@ -14,7 +14,6 @@ fn part1(input: &str) -> String {
             first * 10 + last
         })
         .sum::<u32>()
-        .to_string()
 }
 
 fn convert_digit(input: &str) -> u32 {
@@ -26,7 +25,7 @@ fn convert_digit(input: &str) -> u32 {
     input.parse().unwrap()
 }
 
-fn part2(input: &str) -> String {
+fn part2(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
@@ -42,7 +41,6 @@ fn part2(input: &str) -> String {
                 .fold(0, |acc, (_, v)| acc * 10 + convert_digit(v))
         })
         .sum::<u32>()
-        .to_string()
 }
 
 fn main() {
@@ -52,4 +50,21 @@ fn main() {
         include_str!("input"),
     ];
     advent2023::solve_day(&file_contents, part1, part2);
+}
+
+#[cfg(test)]
+mod day01 {
+    use super::*;
+
+    #[test]
+    fn test_part1() {
+        assert!(part1(include_str!("example")) == 142);
+        assert!(part1(include_str!("input")) == 54630);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert!(part2(include_str!("example2")) == 281);
+        assert!(part2(include_str!("input")) == 54770);
+    }
 }

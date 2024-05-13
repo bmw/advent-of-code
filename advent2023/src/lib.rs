@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 struct Input<'a> {
     contents: &'a str,
     title: &'a str,
@@ -37,7 +39,11 @@ impl<'a> Input<'a> {
     }
 }
 
-pub fn solve_day(file_contents: &Vec<&str>, part1: fn(&str) -> String, part2: fn(&str) -> String) {
+pub fn solve_day<A: Display, B: Display>(
+    file_contents: &Vec<&str>,
+    part1: fn(&str) -> A,
+    part2: fn(&str) -> B,
+) {
     let inputs: Vec<_> = file_contents
         .iter()
         .enumerate()
