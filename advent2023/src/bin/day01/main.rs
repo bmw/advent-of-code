@@ -13,7 +13,7 @@ fn part1(input: &str) -> u32 {
             let last = iter.last().unwrap_or(first);
             first * 10 + last
         })
-        .sum::<u32>()
+        .sum()
 }
 
 fn convert_digit(input: &str) -> u32 {
@@ -40,7 +40,7 @@ fn part2(input: &str) -> u32 {
                 .iter()
                 .fold(0, |acc, (_, v)| acc * 10 + convert_digit(v))
         })
-        .sum::<u32>()
+        .sum()
 }
 
 fn main() {
@@ -49,7 +49,7 @@ fn main() {
         include_str!("example2"),
         include_str!("input"),
     ];
-    advent2023::solve_day(&file_contents, part1, part2);
+    advent2023::calculate_and_print(&file_contents, part1, part2);
 }
 
 #[cfg(test)]
