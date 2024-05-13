@@ -1,10 +1,10 @@
-use std::fs;
+use advent2023;
 
 const DIGITS: [&str; 9] = [
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 ];
 
-fn part1(input: &str) -> u32 {
+fn part1(input: &str) -> String {
     input
         .lines()
         .map(|line| {
@@ -13,7 +13,8 @@ fn part1(input: &str) -> u32 {
             let last = iter.last().unwrap_or(first);
             first * 10 + last
         })
-        .sum()
+        .sum::<u32>()
+        .to_string()
 }
 
 fn convert_digit(input: &str) -> u32 {
@@ -25,7 +26,7 @@ fn convert_digit(input: &str) -> u32 {
     input.parse().unwrap()
 }
 
-fn part2(input: &str) -> u32 {
+fn part2(input: &str) -> String {
     input
         .lines()
         .map(|line| {
@@ -40,17 +41,15 @@ fn part2(input: &str) -> u32 {
                 .iter()
                 .fold(0, |acc, (_, v)| acc * 10 + convert_digit(v))
         })
-        .sum()
+        .sum::<u32>()
+        .to_string()
 }
 
 fn main() {
-    for name in ["example", "example2", "input"] {
-        let input = fs::read_to_string(name).unwrap();
-        if name != "example2" {
-            println!("part 1 answer for {name}: {}", part1(&input));
-        }
-        if name != "example" {
-            println!("part 2 answer for {name}: {}", part2(&input));
-        }
-    }
+    let file_contents = vec![
+        include_str!("example"),
+        include_str!("example2"),
+        include_str!("input")
+    ];
+    advent2023::solve_day(&file_contents, part1, part2);
 }
