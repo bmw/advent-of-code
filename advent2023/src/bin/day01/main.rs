@@ -49,7 +49,7 @@ fn main() {
     let file_contents = vec![
         include_str!("example"),
         include_str!("example2"),
-        include_str!("input")
+        include_str!("input"),
     ];
     advent2023::solve_day(&file_contents, part1, part2);
 }

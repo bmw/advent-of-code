@@ -38,13 +38,25 @@ impl<'a> Input<'a> {
 }
 
 pub fn solve_day(file_contents: &Vec<&str>, part1: fn(&str) -> String, part2: fn(&str) -> String) {
-    let inputs: Vec<_> = file_contents.iter().enumerate().map(|(i, s)| Input::new(s, i, file_contents.len())).collect();
+    let inputs: Vec<_> = file_contents
+        .iter()
+        .enumerate()
+        .map(|(i, s)| Input::new(s, i, file_contents.len()))
+        .collect();
     for input in inputs {
         if input.run_part1 {
-            println!("part 1 answer for {}: {}", input.title, part1(input.contents));
+            println!(
+                "part 1 answer for {}: {}",
+                input.title,
+                part1(input.contents)
+            );
         }
         if input.run_part2 {
-            println!("part 2 answer for {}: {}", input.title, part2(input.contents));
+            println!(
+                "part 2 answer for {}: {}",
+                input.title,
+                part2(input.contents)
+            );
         }
     }
 }
