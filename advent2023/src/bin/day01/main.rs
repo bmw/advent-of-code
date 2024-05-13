@@ -1,5 +1,3 @@
-use advent2023;
-
 const DIGITS: [&str; 9] = [
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 ];
@@ -31,8 +29,7 @@ fn part2(input: &str) -> u32 {
         .map(|line| {
             DIGITS
                 .iter()
-                .map(|s| line.match_indices(s))
-                .flatten()
+                .flat_map(|s| line.match_indices(s))
                 .chain(line.match_indices(char::is_numeric))
                 .fold([(usize::MAX, ""), (usize::MIN, "")], |acc, item| {
                     [item.min(acc[0]), item.max(acc[1])]

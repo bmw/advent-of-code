@@ -40,7 +40,7 @@ impl<'a> Input<'a> {
 }
 
 pub fn calculate_and_print<A: Display, B: Display>(
-    file_contents: &Vec<&str>,
+    file_contents: &[&str],
     part1: fn(&str) -> A,
     part2: fn(&str) -> B,
 ) {
