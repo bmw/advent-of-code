@@ -13,10 +13,7 @@ fn part1(input: &str) -> u32 {
 }
 
 fn main() {
-    let file_contents = vec![
-        include_str!("example"),
-        include_str!("input"),
-    ];
+    let file_contents = vec![include_str!("example"), include_str!("input")];
     advent2023::calculate_and_print(&file_contents, part1, part1);
 }
 

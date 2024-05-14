@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use std::cmp::max;
+use std::collections::HashMap;
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Game {
     pub id: u32,
     pub max_red: u32,
@@ -18,7 +18,10 @@ fn parse_color_counts(rounds: &str) -> HashMap<&str, u32> {
     for round in rounds.split(&[';', ',']) {
         let (count, color) = round.trim().split_once(' ').unwrap();
         let count = count.parse().unwrap();
-        max_counts.entry(color).and_modify(|prev_count| *prev_count = max(*prev_count, count)).or_insert(count);
+        max_counts
+            .entry(color)
+            .and_modify(|prev_count| *prev_count = max(*prev_count, count))
+            .or_insert(count);
     }
     max_counts
 }
