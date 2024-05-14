@@ -4,6 +4,7 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, Debug)]
 pub struct Game {
     pub id: u32,
+    /// These max counts are the maximum number of that color seen at any one time during the game.
     pub max_red: u32,
     pub max_green: u32,
     pub max_blue: u32,
