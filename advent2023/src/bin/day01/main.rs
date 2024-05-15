@@ -55,13 +55,13 @@ mod day01 {
 
     #[test]
     fn test_part1() {
-        assert!(part1(include_str!("example")) == 142);
-        assert!(part1(include_str!("input")) == 54630);
+        assert_eq!(part1(include_str!("example")), 142);
+        assert_eq!(part1(include_str!("input")), 54630);
     }
 
     #[test]
     fn test_part2() {
-        assert!(part2(include_str!("example2")) == 281);
-        assert!(part2(include_str!("input")) == 54770);
+        assert_eq!(part2(include_str!("example2")), 281);
+        assert_eq!(part2(include_str!("input")), 54770);
     }
 }
