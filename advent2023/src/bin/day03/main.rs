@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use std::ops::Range;
 use std::str::from_utf8;
 
-type ByteGrid<'a> = Vec<&'a [u8]>;
+use advent2023::*;
+
+type GearNumberMap = HashMap<(usize, usize), Vec<u32>>;
 
 const PERIOD_AS_U8: u8 = ".".as_bytes()[0];
 const GEAR_AS_U8: u8 = "*".as_bytes()[0];
@@ -57,8 +59,7 @@ fn has_border_symbol(input: &[&[u8]], row_index: usize, col_start: usize, col_en
 
 fn part1(input: &str) -> u32 {
     let input = build_grid(input);
-    let number_indices = find_number_indices(&input);
-    number_indices
+    find_number_indices(&input)
         .into_iter()
         .filter_map(|(row, cols)| {
             if has_border_symbol(&input, row, cols.start, cols.end) {
@@ -81,18 +82,17 @@ fn get_border_gears(
     col_start: usize,
     col_end: usize,
 ) -> Vec<(usize, usize)> {
-    let border = get_border_indices(input, row_index, col_start, col_end);
-    border
+    get_border_indices(input, row_index, col_start, col_end)
         .into_iter()
         .filter(|(i, j)| input[*i][*j] == GEAR_AS_U8)
         .collect()
 }
 
-fn part2(input: &str) -> u32 {
+fn map_gears_to_numbers(input: &str) -> GearNumberMap {
     let input = build_grid(input);
-    let number_indices = find_number_indices(&input);
-    let mut gear_nums: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
-    for (row, cols) in number_indices {
+    let mut gear_nums: GearNumberMap = HashMap::new();
+
+    for (row, cols) in find_number_indices(&input) {
         let col_start = cols.start;
         let col_end = cols.end;
         let num = from_utf8(&input[row][cols]).unwrap().parse().unwrap();
@@ -100,7 +100,12 @@ fn part2(input: &str) -> u32 {
             gear_nums.entry(indices).or_default().push(num);
         }
     }
+
     gear_nums
+}
+
+fn part2(input: &str) -> u32 {
+    map_gears_to_numbers(input)
         .values()
         .filter_map(|v| {
             if v.len() == 2 {
@@ -114,7 +119,7 @@ fn part2(input: &str) -> u32 {
 
 fn main() {
     let file_contents = vec![include_str!("example"), include_str!("input")];
-    advent2023::calculate_and_print(&file_contents, part1, part2);
+    calculate_and_print(&file_contents, part1, part2);
 }
 
 #[cfg(test)]

@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+pub type ByteGrid<'a> = Vec<&'a [u8]>;
+
 struct Input<'a> {
     contents: &'a str,
     title: &'a str,
