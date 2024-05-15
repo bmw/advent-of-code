@@ -16,10 +16,13 @@ fn part1(input: &str) -> u32 {
 }
 
 fn part2(input: &str) -> u32 {
-    input.lines().map(|line| {
-        let game = Game::new(line);
-        game.max_red * game.max_green * game.max_blue
-    }).sum()
+    input
+        .lines()
+        .map(|line| {
+            let game = Game::new(line);
+            game.max_red * game.max_green * game.max_blue
+        })
+        .sum()
 }
 
 fn main() {
