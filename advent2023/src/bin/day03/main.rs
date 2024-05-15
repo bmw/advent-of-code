@@ -20,27 +20,27 @@ fn num_borders_symbol(
     })
 }
 
-fn sum_for_row(input: &[&[u8]], row_index: usize) -> u32 {
-    let row = input[row_index];
-    let mut iter = 0..row.len();
-    let mut result = 0;
-    while let Some(start) = iter.find(|&i| row[i].is_ascii_digit()) {
-        let end = iter
-            .find(|&i| !row[i].is_ascii_digit())
-            .unwrap_or(row.len());
-        if num_borders_symbol(input, row_index, start, end) {
-            result += std::str::from_utf8(&row[start..end])
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
-        }
-    }
-    result
-}
-
 fn part1(input: &str) -> u32 {
     let input: Vec<_> = input.lines().map(|line| line.as_bytes()).collect();
-    (0..input.len()).map(|i| sum_for_row(&input, i)).sum()
+    (0..input.len())
+        .map(|i| {
+            let row = input[i];
+            let mut iter = 0..row.len();
+            let mut result = 0;
+            while let Some(start) = iter.find(|&j| row[j].is_ascii_digit()) {
+                let end = iter
+                    .find(|&j| !row[j].is_ascii_digit())
+                    .unwrap_or(row.len());
+                if num_borders_symbol(&input, i, start, end) {
+                    result += std::str::from_utf8(&row[start..end])
+                        .unwrap()
+                        .parse::<u32>()
+                        .unwrap();
+                }
+            }
+            result
+        })
+        .sum()
 }
 
 fn main() {
