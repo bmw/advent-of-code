@@ -1,51 +1,53 @@
+use std::cmp::min;
+
 const PERIOD_AS_U8: u8 = ".".as_bytes()[0];
 
-fn num_borders_symbol(
-    input: &[&[u8]],
-    row_index: usize,
-    mut col_start: usize,
-    col_end: usize,
-) -> bool {
+fn build_grid(input: &str) -> Vec<&[u8]> {
+    input.lines().map(|line| line.as_bytes()).collect()
+}
+
+fn num_borders_symbol(input: &[&[u8]], row_index: usize, col_start: usize, col_end: usize) -> bool {
     let row_start = row_index.saturating_sub(1);
-    let row_end = row_index + 1;
-    col_start = col_start.saturating_sub(1);
-    (row_start..=row_end).any(|i| {
-        input.get(i).map_or(false, |row| {
-            (col_start..=col_end).any(|j| {
-                row.get(j).map_or(false, |&byte| {
-                    !byte.is_ascii_digit() && byte != PERIOD_AS_U8
-                })
-            })
+    let row_end = min(row_index + 2, input.len());
+    let col_start = col_start.saturating_sub(1);
+    (row_start..row_end)
+        .flat_map(|i| {
+            let col_end = min(col_end + 1, input[i].len());
+            (col_start..col_end).map(move |j| (i, j))
         })
-    })
+        .any(|(i, j)| {
+            let byte = input[i][j];
+            !byte.is_ascii_digit() && byte != PERIOD_AS_U8
+        })
 }
 
 fn part1(input: &str) -> u32 {
-    let input: Vec<_> = input.lines().map(|line| line.as_bytes()).collect();
-    (0..input.len())
-        .map(|i| {
-            let row = input[i];
-            let mut iter = 0..row.len();
-            let mut result = 0;
-            while let Some(start) = iter.find(|&j| row[j].is_ascii_digit()) {
-                let end = iter
-                    .find(|&j| !row[j].is_ascii_digit())
-                    .unwrap_or(row.len());
-                if num_borders_symbol(&input, i, start, end) {
-                    result += std::str::from_utf8(&row[start..end])
-                        .unwrap()
-                        .parse::<u32>()
-                        .unwrap();
-                }
+    let input = build_grid(input);
+    input.iter().enumerate().fold(0, |mut acc, (i, row)| {
+        let mut iter = 0..row.len();
+        while let Some(start) = iter.find(|&j| row[j].is_ascii_digit()) {
+            let end = iter
+                .find(|&j| !row[j].is_ascii_digit())
+                .unwrap_or(row.len());
+            if num_borders_symbol(&input, i, start, end) {
+                acc += std::str::from_utf8(&row[start..end])
+                    .unwrap()
+                    .parse::<u32>()
+                    .unwrap();
             }
-            result
-        })
-        .sum()
+        }
+        acc
+    })
+}
+
+fn part2(input: &str) -> u32 {
+    let _input = build_grid(input);
+    42
 }
 
 fn main() {
     let file_contents = vec![include_str!("example"), include_str!("input")];
-    advent2023::calculate_and_print(&file_contents, part1, part1);
+    advent2023::calculate_and_print(&file_contents, part1, part2);
 }
 
 #[cfg(test)]
