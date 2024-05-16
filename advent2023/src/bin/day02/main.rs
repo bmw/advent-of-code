@@ -1,5 +1,5 @@
 mod game;
-use crate::game::Game;
+use game::Game;
 
 fn part1(input: &str) -> u32 {
     input
