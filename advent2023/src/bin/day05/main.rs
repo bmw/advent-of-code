@@ -69,7 +69,7 @@ fn find_intersection(map1: &Map, map2: &Map) -> Option<(usize, usize)> {
     for (i, r1) in map1.iter().enumerate() {
         for (j, r2) in map2.iter().enumerate() {
             if r1.src_contains(r2.src_start) || r2.src_contains(r1.src_start) {
-                return Some((i, j))
+                return Some((i, j));
             }
         }
     }
@@ -87,7 +87,11 @@ fn merge_if_no_overlap(new_map: &mut Map, old_map: &Map) {
             if old_range.len - overlap_len > 0 {
                 if old_range.src_start < new_range.src_start {
                     let len = new_range.src_start - old_range.src_start;
-                    old_ranges.push(MapRange::new(old_range.dest_start, old_range.src_start, len));
+                    old_ranges.push(MapRange::new(
+                        old_range.dest_start,
+                        old_range.src_start,
+                        len,
+                    ));
                 }
                 if old_range.src_end() > new_range.src_end() {
                     let len = old_range.src_end() - new_range.src_end();
@@ -131,7 +135,8 @@ fn seeds_to_test(seed_ranges: &SeedRanges, map: &Map) -> Vec<u64> {
     let mut v = Vec::new();
     for map_range in map {
         for seed_range in seed_ranges {
-            if seed_range.contains(&map_range.src_start) || map_range.src_contains(seed_range.start) {
+            if seed_range.contains(&map_range.src_start) || map_range.src_contains(seed_range.start)
+            {
                 v.push(max(map_range.src_start, seed_range.start));
             }
         }
@@ -168,7 +173,10 @@ fn seed_line_to_ints(line: &str) -> Vec<u64> {
 }
 
 fn parse_part1_seeds(line: &str) -> SeedRanges {
-    seed_line_to_ints(line).iter().map(|&i| (i..i+1)).collect()
+    seed_line_to_ints(line)
+        .iter()
+        .map(|&i| (i..i + 1))
+        .collect()
 }
 
 fn part1(input: &str) -> u64 {
@@ -176,7 +184,10 @@ fn part1(input: &str) -> u64 {
 }
 
 fn parse_part2_seeds(line: &str) -> SeedRanges {
-    seed_line_to_ints(line).chunks(2).map(|chunk| (chunk[0]..chunk[0] + chunk[1])).collect()
+    seed_line_to_ints(line)
+        .chunks(2)
+        .map(|chunk| (chunk[0]..chunk[0] + chunk[1]))
+        .collect()
 }
 
 fn part2(input: &str) -> u64 {
