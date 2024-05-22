@@ -36,7 +36,7 @@ fn merge_overlap(first_map: &NumMap, second_map: &NumMap) -> NumMap {
         let first_dest = first_result.dest;
         let first_len = first_result.len;
         // find the ranges in the second map that applies to the first's output
-        let mut iter = second_map.map.range(first_dest..first_dest + first_len);
+        let iter = second_map.map.range(first_dest..first_dest + first_len);
         for (&second_src, &second_result) in iter {
             // make merged map apply both maps in sequence
             let first_offset = second_src - first_dest;
@@ -58,7 +58,7 @@ fn merge_no_overlap(new_map: &mut NumMap, old_map: &NumMap) {
         let mut old_dest = old_result.dest;
         let mut split_ranges = Vec::new();
 
-        let mut iter = new_map.map.range(old_src..old_src + old_result.len);
+        let iter = new_map.map.range(old_src..old_src + old_result.len);
         for (&new_src, &new_result) in iter {
             if old_src < new_src {
                 let tmp = new_src + new_result.len;
@@ -79,6 +79,7 @@ impl NumMap {
     }
 
     pub fn insert(&mut self, src: u64, dest: u64, len: u64) {
+        println!("{src} {dest} {len}");
         println!("{:?}", self.containing_entry(src));
         assert!(self.containing_entry(src).is_none());
         self.map.insert(src, MapResult { dest, len });
