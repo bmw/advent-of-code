@@ -1,6 +1,9 @@
+mod num_map;
+
 use std::cmp::{max, min};
 use std::error;
 use std::ops::Range;
+use num_map::NumMap;
 
 type Map = Vec<MapRange>;
 type SeedRanges = Vec<Range<u64>>;
@@ -131,13 +134,13 @@ fn update_map(old_map: &Map, new_map_lines: &[&str]) -> Map {
     merged_map
 }
 
-fn seeds_to_test(seed_ranges: &SeedRanges, map: &Map) -> Vec<u64> {
+fn seeds_to_test(seed_ranges: &SeedRanges, map: &NumMap) -> Vec<u64> {
     let mut v = Vec::new();
-    for map_range in map {
+    for entry in map.iter() {
         for seed_range in seed_ranges {
-            if seed_range.contains(&map_range.src_start) || map_range.src_contains(seed_range.start)
+            if seed_range.contains(&entry.src) || (entry.src..entry.src + entry.len).contains(&seed_range.start)
             {
-                v.push(max(map_range.src_start, seed_range.start));
+                v.push(max(entry.src, seed_range.start));
             }
         }
     }
@@ -150,7 +153,7 @@ fn seeds_to_test(seed_ranges: &SeedRanges, map: &Map) -> Vec<u64> {
 fn do_part<T: Fn(&str) -> SeedRanges>(input: &str, seed_fn: T) -> u64 {
     let mut iter = input.lines().filter(|line| !line.is_empty()).peekable();
     let seed_ranges = seed_fn(iter.next().unwrap());
-    let mut map = Map::new();
+    let mut map = NumMap::default();
 
     let _ = iter.next();
     while iter.peek().is_some() {
@@ -158,11 +161,11 @@ fn do_part<T: Fn(&str) -> SeedRanges>(input: &str, seed_fn: T) -> u64 {
             .by_ref()
             .take_while(|line| line.as_bytes()[0].is_ascii_digit())
             .collect();
-        map = update_map(&map, &map_lines);
+        let tmp_map = NumMap::try_from(&map_lines).unwrap();
+        map = map.merged_maps(&tmp_map);
     }
     let mut seeds = seeds_to_test(&seed_ranges, &map);
-    apply_map(&map, &mut seeds);
-    *seeds.iter().min().unwrap()
+    seeds.iter().map(|&v| map.map_value(v)).min().unwrap()
 }
 
 fn seed_line_to_ints(line: &str) -> Vec<u64> {
