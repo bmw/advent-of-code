@@ -27,7 +27,9 @@ fn merge_overlap(first_map: &NumMap, second_map: &NumMap) -> NumMap {
         let first_dest = first_result.dest;
         let first_len = first_result.len;
         // find the ranges in the second map that applies to the first's output
-        let iter: Vec<_> = second_map.overlapping_entries(first_dest, first_len).collect();
+        let iter: Vec<_> = second_map
+            .overlapping_entries(first_dest, first_len)
+            .collect();
         for entry in iter {
             let second_src = entry.src;
             let second_dest = entry.dest;
@@ -53,7 +55,11 @@ fn merge_no_overlap(new_map: &mut NumMap, old_map: &NumMap) {
         let mut split_ranges = Vec::new();
 
         let iter = new_map.overlapping_entries(old_src, old_result.len);
-        let iter = iter.collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>();
+        let iter = iter
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>();
         for entry in iter {
             let new_src = entry.src;
             let new_len = entry.len;
@@ -74,31 +80,24 @@ fn merge_no_overlap(new_map: &mut NumMap, old_map: &NumMap) {
 }
 
 impl NumMap {
-    fn containing_entry(&self, value: u64) -> Option<(&u64, &MapResult)> {
-        self.map.range(..=value).next_back().and_then(|v| {
-            let (&range_src, &range_result) = v;
-            if value >= range_src && value < range_src + range_result.len {
-                Some(v)
-            } else {
-                None
-            }
-        })
-    }
-
     pub fn insert(&mut self, src: u64, dest: u64, len: u64) {
         assert!(self.overlapping_entries(src, len).next().is_none());
         self.map.insert(src, MapResult { dest, len });
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=MapEntry> + '_ {
-        self.map.iter().map(|(&src, &MapResult { dest, len })| MapEntry { src, dest, len })
+    pub fn iter(&self) -> impl Iterator<Item = MapEntry> + '_ {
+        self.map
+            .iter()
+            .map(|(&src, &MapResult { dest, len })| MapEntry { src, dest, len })
     }
 
     pub fn map_value(&self, value: u64) -> u64 {
-        self.overlapping_entries(value, 1).next().map_or(value, |entry| {
-            assert!(entry.src <= value && value < entry.src + entry.len);
-            entry.dest + value - entry.src
-        })
+        self.overlapping_entries(value, 1)
+            .next()
+            .map_or(value, |entry| {
+                assert!(entry.src <= value && value < entry.src + entry.len);
+                entry.dest + value - entry.src
+            })
     }
 
     // TODO: try merging in place?
@@ -109,14 +108,21 @@ impl NumMap {
         merged_map
     }
 
-    fn overlapping_entries(&self, value: u64, len: u64) -> impl Iterator<Item=MapEntry> + '_ {
-        self.map.range(..value + len).rev().map_while(move |(&src, &entry)| {
-            if src + entry.len > value {
-                Some(MapEntry { src, dest: entry.dest, len: entry.len })
-            } else {
-                None
-            }
-        })
+    fn overlapping_entries(&self, value: u64, len: u64) -> impl Iterator<Item = MapEntry> + '_ {
+        self.map
+            .range(..value + len)
+            .rev()
+            .map_while(move |(&src, &entry)| {
+                if src + entry.len > value {
+                    Some(MapEntry {
+                        src,
+                        dest: entry.dest,
+                        len: entry.len,
+                    })
+                } else {
+                    None
+                }
+            })
     }
 }
 
