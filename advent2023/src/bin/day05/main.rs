@@ -1,31 +1,77 @@
-mod num_map;
-use num_map::NumMap;
-use std::cmp::max;
+use std::cmp::min;
+use std::collections::BTreeMap;
 use std::ops::Range;
 
+type Map = BTreeMap<u64, MapValue>;
 type SeedRanges = Vec<Range<u64>>;
 
-fn seeds_to_test(seed_ranges: &SeedRanges, map: &NumMap) -> Vec<u64> {
-    let mut v = Vec::new();
-    for entry in map.iter() {
-        for seed_range in seed_ranges {
-            if seed_range.contains(&entry.src)
-                || (entry.src..entry.src + entry.len).contains(&seed_range.start)
-            {
-                v.push(max(entry.src, seed_range.start));
+#[derive(Clone, Copy, Debug)]
+struct MapValue {
+    dest: u64,
+    len: u64,
+}
+
+fn build_map(map_lines: &[&str]) -> Map {
+    let mut map = Map::new();
+    for line in map_lines {
+        let v: Vec<_> = line
+            .split_whitespace()
+            .map(|s| s.parse().unwrap())
+            .collect();
+        assert_eq!(v.len(), 3);
+        map.insert(
+            v[1],
+            MapValue {
+                dest: v[0],
+                len: v[2],
+            },
+        );
+    }
+    map
+}
+
+fn apply_map(input_ranges: &SeedRanges, map: &Map) -> SeedRanges {
+    let mut output_ranges = Vec::new();
+    for range in input_ranges {
+        let mut range = range.clone();
+        let mut iter = map.iter().peekable();
+        while range.start != range.end {
+            match iter.peek() {
+                // either the range comes before the current map entry...
+                Some((&src, _)) if range.start < src => {
+                    let end = min(range.end, src);
+                    output_ranges.push(range.start..end);
+                    range.start = end;
+                }
+                // overlaps with the current map entry...
+                Some((&src, &MapValue { mut dest, len }))
+                    if range.start >= src && range.start < src + len =>
+                {
+                    let offset = range.start - src;
+                    dest += offset;
+                    let len = min(range.end - range.start, len - offset);
+                    output_ranges.push(dest..dest + len);
+                    range.start += len;
+                    iter.next();
+                }
+                // comes after the current map entry...
+                Some(_) => {
+                    iter.next();
+                }
+                // or there are no map entries left
+                None => {
+                    output_ranges.push(range.clone());
+                    range.start = range.end;
+                }
             }
         }
     }
-    for seed_range in seed_ranges {
-        v.push(seed_range.start);
-    }
-    v
+    output_ranges
 }
 
 fn do_part<T: Fn(&str) -> SeedRanges>(input: &str, seed_fn: T) -> u64 {
     let mut iter = input.lines().filter(|line| !line.is_empty()).peekable();
-    let seed_ranges = seed_fn(iter.next().unwrap());
-    let mut map = NumMap::default();
+    let mut seeds = seed_fn(iter.next().unwrap());
 
     let _ = iter.next();
     while iter.peek().is_some() {
@@ -33,11 +79,9 @@ fn do_part<T: Fn(&str) -> SeedRanges>(input: &str, seed_fn: T) -> u64 {
             .by_ref()
             .take_while(|line| line.as_bytes()[0].is_ascii_digit())
             .collect();
-        let tmp_map = NumMap::try_from(&map_lines).unwrap();
-        map = map.merged_maps(&tmp_map);
+        seeds = apply_map(&seeds, &build_map(&map_lines));
     }
-    let seeds = seeds_to_test(&seed_ranges, &map);
-    seeds.iter().map(|&v| map.map_value(v)).min().unwrap()
+    seeds.iter().map(|r| r.start).min().unwrap()
 }
 
 fn seed_line_to_ints(line: &str) -> Vec<u64> {
