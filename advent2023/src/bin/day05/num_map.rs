@@ -1,12 +1,3 @@
-//1.create range from str and insert
-//2.map num thru
-//3.find out if two map ranges intersect
-//4.merge new range to existing
-//5.iterate over source ranges
-//
-//1. vec is O(n) insert while btree is olog(n)
-//2. map is ologn in either case
-//3.
 use std::cmp::min;
 use std::collections::BTreeMap;
 use std::error;
@@ -18,13 +9,13 @@ pub struct MapEntry {
     pub len: u64,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct MapResult {
     dest: u64,
     len: u64,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct NumMap {
     map: BTreeMap<u64, MapResult>,
 }
@@ -36,17 +27,17 @@ fn merge_overlap(first_map: &NumMap, second_map: &NumMap) -> NumMap {
         let first_dest = first_result.dest;
         let first_len = first_result.len;
         // find the ranges in the second map that applies to the first's output
-        let iter = second_map.overlapping_entries(first_dest, first_len);
+        let iter: Vec<_> = second_map.overlapping_entries(first_dest, first_len).collect();
         for entry in iter {
             let second_src = entry.src;
             let second_dest = entry.dest;
             let second_len = entry.len;
-            // make merged map apply both maps in sequence
-            let first_offset = second_src - first_dest;
-            let overlap_len = min(second_len, first_len - first_offset);
+            let first_offset = second_src.saturating_sub(first_dest);
+            let second_offset = first_dest.saturating_sub(second_src);
+            let overlap_len = min(second_len - second_offset, first_len - first_offset);
             merged_map.insert(
                 first_src + first_offset,
-                second_dest,
+                second_dest + second_offset,
                 overlap_len,
             )
         }
@@ -60,14 +51,12 @@ fn merge_no_overlap(new_map: &mut NumMap, old_map: &NumMap) {
         let mut old_dest = old_result.dest;
         let old_end = old_src + old_result.len;
         let mut split_ranges = Vec::new();
-        println!("considering {old_src} {old_result:?}");
 
         let iter = new_map.overlapping_entries(old_src, old_result.len);
         let iter = iter.collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>();
         for entry in iter {
             let new_src = entry.src;
             let new_len = entry.len;
-            println!("found overlap {new_src} {new_len}");
             if old_src < new_src {
                 split_ranges.push((old_src, old_dest, new_src - old_src));
             }
@@ -78,7 +67,6 @@ fn merge_no_overlap(new_map: &mut NumMap, old_map: &NumMap) {
         if old_src < old_end {
             split_ranges.push((old_src, old_dest, old_end - old_src));
         }
-        println!("{split_ranges:?}");
         for (src, dest, len) in split_ranges {
             new_map.insert(src, dest, len);
         }
@@ -98,7 +86,6 @@ impl NumMap {
     }
 
     pub fn insert(&mut self, src: u64, dest: u64, len: u64) {
-        println!("inserting {src} {dest} {len} into {self:?}");
         assert!(self.overlapping_entries(src, len).next().is_none());
         self.map.insert(src, MapResult { dest, len });
     }
@@ -108,12 +95,13 @@ impl NumMap {
     }
 
     pub fn map_value(&self, value: u64) -> u64 {
-        self.overlapping_entries(value, value + 1).next().map_or(value, |entry| {
-            assert!(entry.src >= value && value < entry.src + entry.len);
+        self.overlapping_entries(value, 1).next().map_or(value, |entry| {
+            assert!(entry.src <= value && value < entry.src + entry.len);
             entry.dest + value - entry.src
         })
     }
 
+    // TODO: try merging in place?
     pub fn merged_maps(&self, other: &Self) -> Self {
         let mut merged_map = merge_overlap(self, other);
         merge_no_overlap(&mut merged_map, self);
@@ -123,8 +111,7 @@ impl NumMap {
 
     fn overlapping_entries(&self, value: u64, len: u64) -> impl Iterator<Item=MapEntry> + '_ {
         self.map.range(..value + len).rev().map_while(move |(&src, &entry)| {
-            // src 50, entry len 48, pulled up because first less than, value 98
-            if src <= value && value < src + entry.len {
+            if src + entry.len > value {
                 Some(MapEntry { src, dest: entry.dest, len: entry.len })
             } else {
                 None
@@ -134,6 +121,7 @@ impl NumMap {
 }
 
 /// This is specific to day 5, but since it's my only need for this right now...
+// TODO: why &Vec?
 impl TryFrom<&Vec<&str>> for NumMap {
     type Error = Box<dyn error::Error>;
     fn try_from(lines: &Vec<&str>) -> Result<Self, Self::Error> {
