@@ -1,68 +1,70 @@
-use std::cmp::min;
-use std::collections::BTreeMap;
+use std::error;
 use std::ops::Range;
 
-type Map = BTreeMap<u64, MapValue>;
+type Map = Vec<MapEntry>;
 type SeedRanges = Vec<Range<u64>>;
 
-#[derive(Clone, Copy, Debug)]
-struct MapValue {
-    dest: u64,
+#[derive(Clone, Debug)]
+struct MapEntry {
+    src_start: u64,
+    dest_start: u64,
     len: u64,
 }
 
-fn build_map(map_lines: &[&str]) -> Map {
-    let mut map = Map::new();
-    for line in map_lines {
-        let v: Vec<_> = line
-            .split_whitespace()
-            .map(|s| s.parse().unwrap())
-            .collect();
-        assert_eq!(v.len(), 3);
-        map.insert(
-            v[1],
-            MapValue {
-                dest: v[0],
-                len: v[2],
-            },
-        );
+impl MapEntry {
+    fn src_overlaps_with(&self, range: &Range<u64>) -> bool {
+        (self.src_start..self.src_start + self.len).contains(&range.start)
+            || range.contains(&self.src_start)
     }
-    map
 }
 
-fn apply_map(input_ranges: &SeedRanges, map: &Map) -> SeedRanges {
+impl TryFrom<&str> for MapEntry {
+    type Error = Box<dyn error::Error>;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let mut v = Vec::new();
+        for i in value.split_whitespace() {
+            v.push(i.parse()?);
+        }
+        assert_eq!(v.len(), 3);
+        Ok(MapEntry {
+            dest_start: v[0],
+            src_start: v[1],
+            len: v[2],
+        })
+    }
+}
+
+fn build_map(map_lines: &[&str]) -> Map {
+    map_lines
+        .iter()
+        .map(|&line| MapEntry::try_from(line).unwrap())
+        .collect()
+}
+
+// we modify seed_ranges directly rather than cloning it just because we don't need it anymore
+fn apply_map(seed_ranges: &mut SeedRanges, map: &Map) -> SeedRanges {
     let mut output_ranges = Vec::new();
-    for range in input_ranges {
-        let mut range = range.clone();
-        let mut iter = map.iter().peekable();
-        while range.start != range.end {
-            match iter.peek() {
-                // either the range comes before the current map entry...
-                Some((&src, _)) if range.start < src => {
-                    let end = min(range.end, src);
-                    output_ranges.push(range.start..end);
-                    range.start = end;
+    while let Some(mut range) = seed_ranges.pop() {
+        match map.iter().find(|e| e.src_overlaps_with(&range)) {
+            Some(entry) => {
+                // split off any part before entry
+                if range.start < entry.src_start {
+                    seed_ranges.push(range.start..entry.src_start);
+                    range.start = entry.src_start;
                 }
-                // overlaps with the current map entry...
-                Some((&src, &MapValue { mut dest, len }))
-                    if range.start >= src && range.start < src + len =>
-                {
-                    let offset = range.start - src;
-                    dest += offset;
-                    let len = min(range.end - range.start, len - offset);
-                    output_ranges.push(dest..dest + len);
-                    range.start += len;
-                    iter.next();
+                let entry_src_end = entry.src_start + entry.len;
+                // split off any part after entry
+                if range.end > entry_src_end {
+                    seed_ranges.push(entry_src_end..range.end);
+                    range.end = entry_src_end;
                 }
-                // comes after the current map entry...
-                Some(_) => {
-                    iter.next();
-                }
-                // or there are no map entries left
-                None => {
-                    output_ranges.push(range.clone());
-                    range.start = range.end;
-                }
+                // map range through entry
+                let new_start = entry.dest_start + range.start - entry.src_start;
+                let new_end = entry.dest_start + range.end - entry.src_start;
+                output_ranges.push(new_start..new_end);
+            }
+            None => {
+                output_ranges.push(range);
             }
         }
     }
@@ -70,16 +72,19 @@ fn apply_map(input_ranges: &SeedRanges, map: &Map) -> SeedRanges {
 }
 
 fn do_part<T: Fn(&str) -> SeedRanges>(input: &str, seed_fn: T) -> u64 {
-    let mut iter = input.lines().filter(|line| !line.is_empty()).peekable();
+    let mut iter = input.lines();
     let mut seeds = seed_fn(iter.next().unwrap());
 
-    let _ = iter.next();
+    // we skip the blank line after the seed line
+    let mut iter = iter.skip(1).peekable();
     while iter.peek().is_some() {
         let map_lines: Vec<&str> = iter
             .by_ref()
-            .take_while(|line| line.as_bytes()[0].is_ascii_digit())
+            .skip(1) // skip map header
+            .take_while(|line| !line.is_empty())
             .collect();
-        seeds = apply_map(&seeds, &build_map(&map_lines));
+        let map = build_map(&map_lines);
+        seeds = apply_map(&mut seeds, &map);
     }
     seeds.iter().map(|r| r.start).min().unwrap()
 }
