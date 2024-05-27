@@ -22,7 +22,7 @@ fn ways2win(total_time: u64, distance: u64) -> u64 {
     let max = (1..total_time)
         .rfind(|&hold_time| is_way_to_win(hold_time))
         .unwrap();
-    max + 1 - min
+    max - min + 1
 }
 
 fn part1(input: &str) -> u64 {
