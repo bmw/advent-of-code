@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::error;
-use std::str::FromStr;
+
+const JOKER_VALUE: u8 = b'2' - 1;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum HandType {
@@ -24,6 +24,8 @@ fn determine_hand_type(cards: &[u8; 5]) -> HandType {
     for &card in cards {
         *map.entry(card).or_default() += 1;
     }
+    // i'm pretty sure i can just add the number of jokers to whatever value in map is the highest
+    // and the rest of this will work
     let card_counts: Vec<_> = map.into_values().collect();
     if card_counts.len() == 5 {
         HandType::HighCard
@@ -45,40 +47,45 @@ fn determine_hand_type(cards: &[u8; 5]) -> HandType {
     }
 }
 
-impl FromStr for Hand {
-    type Err = Box<dyn error::Error>;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl Hand {
+    fn new(s: &str, with_jokers: bool) -> Self {
         let mut cards = [0; 5];
         for (i, v) in s.as_bytes().iter().enumerate() {
             cards[i] = match *v {
                 b'A' => b'9' + 5,
                 b'K' => b'9' + 4,
                 b'Q' => b'9' + 3,
-                b'J' => b'9' + 2,
+                b'J' => {
+                    if with_jokers {
+                        JOKER_VALUE
+                    } else {
+                        b'9' + 2
+                    }
+                }
                 b'T' => b'9' + 1,
                 v if (b'2'..=b'9').contains(&v) => v,
                 _ => panic!("bad card"),
             };
         }
-        Ok(Hand {
+        Hand {
             hand_type: determine_hand_type(&cards),
             cards,
-        })
+        }
     }
 }
 
-fn parse(input: &str) -> Vec<(Hand, u64)> {
+fn parse(input: &str, with_jokers: bool) -> Vec<(Hand, u64)> {
     input
         .lines()
         .map(|s| {
             let (cards, bid) = s.split_once(char::is_whitespace).unwrap();
-            (cards.parse().unwrap(), bid.parse().unwrap())
+            (Hand::new(cards, with_jokers), bid.parse().unwrap())
         })
         .collect()
 }
 
 fn part1(input: &str) -> u64 {
-    let mut v = parse(input);
+    let mut v = parse(input, false);
     v.sort_unstable();
     (1..).zip(v).map(|(i, (_, bid))| i * bid).sum()
 }
