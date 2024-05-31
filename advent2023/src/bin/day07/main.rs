@@ -24,8 +24,13 @@ fn determine_hand_type(cards: &[u8; 5]) -> HandType {
     for &card in cards {
         *map.entry(card).or_default() += 1;
     }
-    // i'm pretty sure i can just add the number of jokers to whatever value in map is the highest
-    // and the rest of this will work
+    // skip checking for jokers if there's only one typ of card
+    if map.len() > 1 {
+        if let Some(joker_count) = map.remove(&JOKER_VALUE) {
+            // add joker count to the most common card
+            *map.values_mut().max().unwrap() += joker_count;
+        }
+    }
     let card_counts: Vec<_> = map.into_values().collect();
     if card_counts.len() == 5 {
         HandType::HighCard
@@ -90,9 +95,15 @@ fn part1(input: &str) -> u64 {
     (1..).zip(v).map(|(i, (_, bid))| i * bid).sum()
 }
 
+fn part2(input: &str) -> u64 {
+    let mut v = parse(input, true);
+    v.sort_unstable();
+    (1..).zip(v).map(|(i, (_, bid))| i * bid).sum()
+}
+
 fn main() {
     let file_contents = vec![include_str!("example"), include_str!("input")];
-    advent2023::calculate_and_print(&file_contents, part1, part1);
+    advent2023::calculate_and_print(&file_contents, part1, part2);
 }
 
 #[cfg(test)]
@@ -105,9 +116,9 @@ mod day07 {
         assert_eq!(part1(include_str!("input")), 250474325);
     }
 
-    //#[test]
-    //fn test_part2() {
-    //    assert_eq!(part2(include_str!("example")), 71503);
-    //    assert_eq!(part2(include_str!("input")), 38017587);
-    //}
+    #[test]
+    fn test_part2() {
+        assert_eq!(part2(include_str!("example")), 5905);
+        assert_eq!(part2(include_str!("input")), 248909434);
+    }
 }
