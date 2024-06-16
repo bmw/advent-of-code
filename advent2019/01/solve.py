@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+#
+# welp...it appears the fun of writing rust in a more functional style seems to
+# have triggered a desire for me to try and shoehorn it into python
 
 INPUTS_TO_EXPECTED_OUTPUTS = {
     #'example': (None, None),
