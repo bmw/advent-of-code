@@ -61,13 +61,10 @@ fn part1(input: &str) -> u64 {
 fn part2(input: &str) -> u64 {
     let (route, network) = parse(input);
     let mut route_iter = route.iter().cycle();
-    let mut positions: Vec<&str> = network.keys().filter_map(|k| {
-        if k.ends_with('A') {
-            Some(*k)
-        } else {
-            None
-        }
-    }).collect();
+    let mut positions: Vec<&str> = network
+        .keys()
+        .filter_map(|k| if k.ends_with('A') { Some(*k) } else { None })
+        .collect();
     let mut step_count = 0;
     // too slow, gotta find cycle len and overlap..
     while positions.iter().any(|p| !p.ends_with('Z')) {
